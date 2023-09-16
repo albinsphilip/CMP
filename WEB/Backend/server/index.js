@@ -1,10 +1,8 @@
 const { MongoClient, ServerApiVersion,ObjectId } = require('mongodb');
-//const fs = require('fs');
 
 const express = require("express");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
-//const mysql = require("mysql");
 const uri = "mongodb+srv://aaron:aa@cluster0.cgelvmu.mongodb.net/?retryWrites=true&w=majority";
 const client = new MongoClient(uri, {
     serverApi: {
@@ -13,7 +11,8 @@ const client = new MongoClient(uri, {
         deprecationErrors: true,
     }
 });
-
+async function run(){
+    
 const PORT = process.env.PORT || 3001;
 const app = express();
 
@@ -23,10 +22,11 @@ app.use(cors());
 
 
 var student = '';
+await client.connect();
 
-app.post('/login', async (req, res) => {
+app.post('/login',  async(req, res) => {
     const { username, password } = req.body;
-    async function run() {
+  
         try {
        /*     const us=[
                 {
@@ -97,14 +97,24 @@ app.post('/login', async (req, res) => {
               } catch (err) {
                 console.error(`Something went wrong trying to insert the new documents: ${err}\n`);
               }*/
+             
             await client.db("user").command({ ping: 1 });
            
-            const user = await collection.findOne({ username, password });
+            const user = await collection.findOne({ username, password});
             if (user) {
-                const token = jwt.sign({ username }, '123');
-                res.json({ token });
+                const token1 = jwt.sign({ username,exp:600 }, '1234');
+                var pos= user.pos
+                res.json({ token1,pos});
                 student=user;
-              
+                if(pos==='teacher'){
+                sub=user.subject;
+                cls=user.class;
+            }
+             const cursor = collection.find({pos:'student',class: cls});
+              users = [];
+              await cursor.forEach(user => {
+                users.push(user);
+              });
             }
             else if (username === "" || password === "") {
                 res.status(401).json({ message: 'Enter username or password!' });
@@ -113,110 +123,202 @@ app.post('/login', async (req, res) => {
                 res.status(401).json({ message: 'Invalid username or password' });
             }
         } finally {
-            await client.close();
+            console.log('done');
         }
-    }
-    run().catch(console.dir);
-});
+  
+}); 
+
 app.get("/api/student", (req, res) => {
 
     res.json(student);
 });
-/*app.post("/api/login", (req, res) => {
-    const { username, password } = req.body;
-    fs.readFile('server/student.json', 'utf8', function (err, data) {
-        // Handle the error if any
-        if (err) {
-            console.error(err);
-            return;
-        }
-        // Parse the data into a JavaScript object
-        const parsed = JSON.parse(data);
-        const users = parsed.users;
-        //  let usera = Object.values(users);
-        var b = false;
-        // var user = usera.find(user => user.username === username);
-        for (const user of users) {
-            // Access the username and password properties of each user object
-            if (user.username === username && user.password === password) {
-                b = true;
-                student = user.name;
+var users = [];
+app.get("/api/total", (req, res) => {
 
-            }
-        }
-
-        // console.log(user);
-
-        if (b) {
-            const expiresIn = 60 ;
-            const token = jwt.sign({ username,exp: expiresIn  }, '123');
-            res.json({ token });
-        }
-        else if (username === "" || password === "") {
-            res.status(401).json({ message: 'Enter username or password!' });
-        }
-        else {
-            res.status(401).json({ message: 'Invalid username or password' });
-        }
-    }); 
- 
+    res.json(users);
 });
-*/
-/*app.get("/api/studentnam", (req, res) => {
-    fs.readFile('server/student.json', 'utf8', function (err, data) {
-        // Handle the error if any
-        if (err) {
-            console.error(err);
-            return;
-        }
-        // Parse the data into a JavaScript object
-        const parsed = JSON.parse(data);
-        const users = parsed.users;
-        var d = '';
-        for (const user of users) {
-            if (user.name === student) {
-                 d = user;
-            }
-        }
-       // const data = { message: student };
-        //res.json(data);
-        res.json(d);
+app.post("/assig", async(req, res) => {
+  const {assig,date} = req.body;
+  try{
+    const db = client.db('data');
+    const collection = db.collection('user');
+    for(const user of users){
+      var myquery1 = {name:user.name, class:cls,pos:'student',assignment: { $exists: true, $type: 'array'}}; 
+      var newvalues1 = { $push: { ['assignment'] :{sub,$type:'array'}} };
 
+      await collection.updateOne(myquery1, newvalues1).then(res =>{
+        console.log("assig added");
+        
+
+    
+    }).catch(err =>{
+        console.log(err);
     });
+    
+    var myquery = {name:user.name, class: cls,pos:'student',['assignment.'+ sub +'.date']: date };
+    var newvalues = { $set: { ['assignment.' + sub+'.$']: { date: date, value: assig } } };
+    
+    let result = await collection.updateOne(myquery, newvalues);
+                if (result.matchedCount === 0) {
+                  myquery = {name:user.name,class: cls,pos:'student' };
+                  newvalues = { $push: {  ['assignment.' + sub]: { date: date, value: assig }} };
+                }
+                 await   collection.updateOne(myquery, newvalues).then(res =>{
+                        console.log("assig updated");
+                        
+            
+                    }).catch(err =>{
+                        console.log(err);
+                    });
+                  }
+  }finally{
 
-});*/
+  }
+  res.json({message:'success'});
+});
+var sub='';
+var cls='';
+app.post("/updateatt", async(req, res) => {
+    const { date, selectedValues,jsonData } = req.body;
+    async function run(){
+    try{
+            console.log('yes');
+            const db = client.db('data');
+            const collection = db.collection('user');
+            if(date && selectedValues){
+            for(const Rollno in selectedValues){
+                console.log('no');
+                var myquery = { classroll: Rollno,['attendance.'+ sub +'.date']: date };
+                var newvalues = { $set: { ['attendance.' + sub+'.$']: { date: date, value: selectedValues[Rollno] } } };
+                let result = await collection.updateOne(myquery, newvalues);
+                if (result.matchedCount === 0) {
+                  myquery = {classroll: Rollno };
+                  newvalues = { $push: {  ['attendance.' + sub]: { date: date, value: selectedValues[Rollno] }} };
+                }
+                 await   collection.updateOne(myquery, newvalues).then(res =>{
+                        console.log(Rollno);
+                        console.log("1 document updated");
+                        
+            
+                    }).catch(err =>{
+                        console.log(err);
+                    });
+              
+            }}
+            else{
+                const obj = JSON.parse(jsonData);
+for (const item of obj) {
 
+   
+    for (const key in item) {
+        if(key !=='Name'){
+            var myquery = { name:item['Name'],['attendance.'+ sub +'.date']: key };
+            var newvalues = { $set: { ['attendance.' + sub+'.$']: { date: [key], value:item[key] } } };
+            let result = await collection.updateOne(myquery, newvalues);
+        if (result.matchedCount === 0) {
+            myquery = {name:item['Name']};
+            if(item[key]==='P'){
+            newvalues = { $push: {  ['attendance.' + sub]: { date: key, value:'Present' }} };
+        }
+            else if (item[key]==='A'){
+                newvalues = { $push: {  ['attendance.' + sub]: { date: key, value:'Absent' }} };
 
-
-/*
-function verifyToken(req, res,next) {
-
-    const token = req.headers["authorization"];
-    if(token){
-
-        jwt.verify(token, secretkey, (err, decoded) => {
-
-            if (err){
-                res.status(403).json({message: "Invalid token"});
-            }else{
-
-                req.user = decoded;
-                next();
             }
-        });
+    }
+         await   collection.updateOne(myquery, newvalues).then(res =>{
+                console.log("1 document updated");
+                
+    
+            }).catch(err =>{
+                console.log(err);
+            });
+            
     }
 }
-app.use(verifyToken);
-app.get("/app/students", (req,res)=> {
-    Student.Find({}, (err,students) =>  {
-        if(err){
-            res.status(500).send(err);
-        }else{
-            res.status(200).json(studemts);
+   
+  
+}
+            }
+        }
+        
+        finally{
 
         }
-    });
-});*/
+        res.json({message:'success'});
+
+    } 
+       run().catch(console.dir);
+
+});
+app.post("/updatemark", async(req, res) => {
+    const {series, selectedValues,jsonData } = req.body;
+    async function run(){
+    try{
+            console.log('yes');
+            const db = client.db('data');
+            const collection = db.collection('user');
+            if( selectedValues){
+            for(const Rollno in selectedValues){
+                console.log('no');
+                var myquery = { classroll: Rollno,['sessionals.'+ sub+'.series']: series };
+                var newvalues = { $set: { ['sessionals.' + sub+'.$']: { series: series, value: selectedValues[Rollno] } } };
+                let result = await collection.updateOne(myquery, newvalues);
+                if (result.matchedCount === 0) {
+                  myquery = {classroll: Rollno };
+                  newvalues = { $push: {  ['sessionals.' + sub]: { series: series, value: selectedValues[Rollno] }} };
+                }
+                 await   collection.updateOne(myquery, newvalues).then(res =>{
+                        console.log(Rollno);
+                        console.log("1 document updated");
+                        
+            
+                    }).catch(err =>{
+                        console.log(err);
+                    });
+              
+            }}
+            else{
+                const obj = JSON.parse(jsonData);
+for (const item of obj) {
+
+   
+    for (const key in item) {
+        if(key !=='Name'){
+            var myquery = { name:item['Name'],['sessionals.'+ sub +'.series']: key };
+            var newvalues = { $set: { ['sessionals.' + sub+'.$']: { series: [key], value:item[key] } } };
+            let result = await collection.updateOne(myquery, newvalues);
+        if (result.matchedCount === 0) {
+            myquery = {name:item['Name']};
+            newvalues = { $push: {  ['sessionals.' + sub]: { series: key, value:item[key] }} };
+        
+          
+    }
+         await   collection.updateOne(myquery, newvalues).then(res =>{
+                console.log("1 document updated");
+                
+    
+            }).catch(err =>{
+                console.log(err);
+            });
+            
+    }
+}
+   
+  
+}
+            }
+        }
+        
+        finally{
+
+        }
+        res.json({message:'success'});
+
+    } 
+       run().catch(console.dir);
+
+});
+
 app.get("/api", (req, res) => {
     res.json({ message: "serverconnected" });
 });
@@ -226,3 +328,4 @@ app.get("/api", (req, res) => {
 app.listen(PORT, () => {
     console.log(`server running on ${PORT}`);
 });
+}       run().catch(console.dir);
