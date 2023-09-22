@@ -37,7 +37,7 @@ export default function App() {
 
 
                 <p >
-                    ri-tec <div className="h"><div onClick={()=>setShow(true)}> <Link className="link" to="/pages/Form"  >Login</Link>      <Link className="link" to="/pages/Contact" >Contact</Link>   <Link className="link" to="/pages/About">About</Link>
+                    RiTec <div className="h"><div onClick={()=>setShow(true)}> <Link className="link" to="/pages/Form"  >Login</Link>      <Link className="link" to="/pages/Contact" >Contact</Link>   <Link className="link" to="/pages/About">About</Link>
                     </div> </div></p>
      
 
