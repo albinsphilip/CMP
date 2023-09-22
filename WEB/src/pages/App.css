@@ -21,8 +21,10 @@
     border-radius: 30px;
     width:  100%;
     margin-bottom: 10px;
-    font-family: cursive;
+    font-family:'Courier New', Courier, monospace;
+    font-style:italic;
 }
+
 .b:active, .b:hover{
     background-color: #0d769f; /* Green */
 
@@ -73,8 +75,8 @@ ul.no-bullets {
     border-radius: 30px;
     width: 100%;
     margin-bottom: 10px;
-    font-family: cursive;
-
+    font-family:'Courier New', Courier, monospace;
+    font-style:italic;
 }
 .B1 {
     background-color: #14a2da; /* Green */
@@ -90,8 +92,8 @@ ul.no-bullets {
     width: 100%;
     margin-bottom: 10px;
     box-shadow: 10px 10px 5px rgb(34, 34, 34);
-    font-family: cursive;
-
+    font-family:'Courier New', Courier, monospace;
+    font-style:italic;
 }
 .B {
     background-color: #14a2da; /* Green */
@@ -106,8 +108,8 @@ ul.no-bullets {
     border-radius: 30px;
     width:  100%;
     margin-bottom: 10px;
-    font-family: cursive;
-
+    font-family:'Courier New', Courier, monospace;
+    font-style:italic;
     box-shadow: 10px 10px 5px rgb(34, 34, 34);
 }
 .d{
@@ -255,23 +257,26 @@ form .cal{
 .c {
     margin-bottom: 100px;
     background: linear-gradient(45deg, #1c191e, #0c1d4f);
-    height: '100vh';
+    height: '110vh';
     animation: gradient 3s ease infinite;
     padding-top: 1%;
-    padding-bottom: 100%;
+    padding-bottom: 150%;
     display: flex;
     flex-direction: column;
     align-items: center;
     color: #fefbfb;
-    font-family:cursive;
+    font-family:'Courier New', Courier, monospace;
+    font-style:italic;
     font-size: larger;
+    margin-left: 10px;
+    margin-right: 10px;
 }
 .c1{
     background: linear-gradient(135deg,#530db5, #060c26, #530db5);
     padding-bottom: 20px;
     padding-top: 20px;
     color: #fefbfb;
-    font-family:cursive;
+    font-family:normal cursive;
     font-size: medium;
     display: flex;
     flex-direction: column;
@@ -309,7 +314,9 @@ form .cal{
     margin-left: 5%;
     margin-top: 5px;
     margin-bottom: 20px;
-    border: 10px solid white;
+    border: 10px solid rgb(255, 255, 255);
+    background-color: #ffffff;
+
     border-radius: 20px;
 }
 .back1 {
@@ -391,12 +398,15 @@ form .cal{
     align-items: end;
     float: right;
     margin-top: 15px;
-   
+    text-transform: uppercase;
+
 }
 .slide {
     display: flex;
     justify-content: center;
     align-items: center;
+    font-family:'Courier New', Courier, monospace;
+    font-style:italic;
 
 }
 .slideshow {
@@ -406,13 +416,13 @@ form .cal{
     text-align: left;
 }
 .h1 {
-    color: rgb(13, 13, 13);
-    font-family: "Avant Garde", Avantgarde, "Century Gothic", CenturyGothic, "AppleGothic", sans-serif;
+    color: rgb(123, 123, 123);
+    font-family:'Courier New', Courier, monospace;
+    font-style:italic;
     font-size: 40px;
     padding: 1px 20px;
-    text-transform: uppercase;
     text-rendering: optimizeLegibility;
-    background: linear-gradient(135deg,#8344dc, #0e1950, #8344dc);
+    background: linear-gradient(158deg,#500c55, #0b1944, #0c1d4f);
     
 }
 .elegantshadow
