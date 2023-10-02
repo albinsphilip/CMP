@@ -26,7 +26,7 @@ await client.connect();
 
 app.post('/login',  async(req, res) => {
     const { username, password } = req.body;
-  
+
         try {
        /*     const us=[
                 {
@@ -109,6 +109,7 @@ app.post('/login',  async(req, res) => {
                 if(pos==='teacher'){
                 sub=user.subject;
                 cls=user.class;
+
             }
             const cursor1 = collection.find({ pos: { $in: ['teacher', 'student'] } });
             tusers=[];
@@ -135,7 +136,7 @@ app.post('/login',  async(req, res) => {
 }); 
 
 app.get("/api/student", async(req, res) => {
-
+  
     res.json(student);
 });
 var users = [];
