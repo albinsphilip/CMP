@@ -1,7 +1,9 @@
 const { MongoClient, ServerApiVersion,ObjectId } = require('mongodb');
-
+const path = require("path");
 const express = require("express");
 const cors = require("cors");
+const multer = require("multer");
+const fs = require('fs');
 const jwt = require("jsonwebtoken");
 const uri = "mongodb+srv://aaron:aa@cluster0.cgelvmu.mongodb.net/?retryWrites=true&w=majority";
 const client = new MongoClient(uri, {
@@ -23,10 +25,11 @@ app.use(cors());
 
 var student = '';
 await client.connect();
-
+var user1 = '';
+var pass = '';
 app.post('/login',  async(req, res) => {
+ 
     const { username, password } = req.body;
-
         try {
        /*     const us=[
                 {
@@ -97,15 +100,21 @@ app.post('/login',  async(req, res) => {
               } catch (err) {
                 console.error(`Something went wrong trying to insert the new documents: ${err}\n`);
               }*/
-             
             await client.db("user").command({ ping: 1 });
            
             const user = await collection.findOne({ username, password});
+           
             if (user) {
+              var pos= user.pos
+              if(pos === 'admin' || server){
+              
                 const token1 = jwt.sign({ username,exp:600 }, '1234');
-                var pos= user.pos
+                
                 res.json({ token1,pos,user});
                 student=user;
+                user1 = username;
+                pass = password;
+    
                 if(pos==='teacher'){
                 sub=user.subject;
                 cls=user.class;
@@ -123,22 +132,143 @@ app.post('/login',  async(req, res) => {
               });
             
             }
-            else if (username === "" || password === "") {
-                res.status(401).json({ message: 'Enter username or password!' });
+          
+            if(!server && pos!=='admin'){
+              res.status(401).json({ message: 'SERVER STOPPED BY ADMIN' });
             }
-            else {
-                res.status(401).json({ message: 'Invalid username or password' });
-            }
-        } finally {
+          }
+          else if (username === "" || password === "") {
+            res.status(401).json({ message: 'Enter username or password!' });
+        }
+        else {
+            res.status(401).json({ message: 'Invalid username or password' });
+        }
+
+        }
+     
+      
+        finally {
             console.log('done');
         }
-  
+      
+      
+      
 }); 
 
+app.get("/api/student1", async(req, res) => {
+  const db = client.db('data');
+  const collection = db.collection('user');
+  const user = await collection.findOne({username:user1, password:pass});
+    var us = user;
+    res.json(us);
+});
 app.get("/api/student", async(req, res) => {
   
     res.json(student);
 });
+const path1 = 'uploads/assig/';
+const path2 = 'uploads/notification/'
+if (!fs.existsSync(path1)) {
+    fs.mkdirSync(path1, { recursive: true });
+}
+if (!fs.existsSync(path2)) {
+  fs.mkdirSync(path2, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null,path1);
+  },
+  filename: (req, file, cb) => {
+    cb(null, file.originalname);
+  },
+});
+
+const upload = multer({ storage });
+
+app.post('/upload', upload.single('file'), (req, res) => {
+  console.log("file uploaded");
+  res.json({ file: req.file });
+});
+const storages = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null,path2);
+  },
+  filename: (req, file, cb) => {
+    cb(null, file.originalname);
+  },
+});
+const upload1 = multer({ storage:storages });
+app.post('/pdfnotify', upload1.single('file'), (req, res) => {
+  console.log("file uploaded");
+  res.json({ file: req.file });
+});
+const assigpath = path.join('C:/Users/mincy/Desktop/portal', 'uploads/assig');
+
+app.get('/getFile/:index', function(req, res) {
+  fs.readdir(assigpath, (err, files) => {
+    if (err) {
+      return res.status(500).send('Unable to scan directory: ' + err);
+    }
+    const file = files[req.params.index];
+    if (file) {
+      const filePath = path.join(assigpath, file);
+      fs.stat(filePath,(err,stats) =>{
+        if (err) {
+          console.error(err);
+          return;
+        }
+        res.setHeader('X-Creation-Time', stats.birthtime.toISOString());
+        res.sendFile(filePath);
+      });
+    } else {
+      res.status(404).send('File not found');
+    }
+  });
+});
+
+const notifypath = path.join('C:/Users/mincy/Desktop/portal', 'uploads/notification');
+
+app.get('/getNotify/:index', function(req, res) {
+  fs.readdir(notifypath, (err, files) => {
+    if (err) {
+      return res.status(500).send('Unable to scan directory: ' + err);
+    }
+    const file = files[req.params.index];
+    if (file) {
+      const filePath = path.join(notifypath, file);
+      fs.stat(filePath,(err,stats) =>{
+        if (err) {
+          console.error(err);
+          return;
+        }
+        res.setHeader('X-Creation-Time', stats.birthtime.toISOString());
+        res.sendFile(filePath);
+      });
+    } else {
+      res.status(404).send('File not found');
+    }
+  });
+});
+
+let server = true;
+
+app.get('/set', function(req, res) {
+   console.log("resumed");
+   server = true;
+   res.json({message:'SERVER RESUMED'});  
+
+  
+ });
+ app.get('/get',function(req,res){
+   res.json(server);
+
+ });
+ app.get("/wait", function(req, res) {
+     console.log("wating");
+     server = false;
+     res.json({message:'SERVER STOPPED'});  
+ });
 var users = [];
 var tusers = [];
 app.get("/api/total", (req, res) => {
@@ -333,7 +463,7 @@ app.post("/adduser", async(req,res)=>{
 });
 
 app.post("/assig", async(req, res) => {
-  const {assig,date} = req.body;
+  const {assig,date,date1} = req.body;
   try{
     const db = client.db('data');
     const collection = db.collection('user');
@@ -351,12 +481,12 @@ app.post("/assig", async(req, res) => {
     });
     
     var myquery = {name:user.name, class: cls,pos:'student',['assignment.'+ sub +'.date']: date };
-    var newvalues = { $set: { ['assignment.' + sub+'.$']: { date: date, value: assig } } };
+    var newvalues = { $set: { ['assignment.' + sub+'.$']: { date: date, value: assig, upload:date1 } } };
     
     let result = await collection.updateOne(myquery, newvalues);
                 if (result.matchedCount === 0) {
                   myquery = {name:user.name,class: cls,pos:'student' };
-                  newvalues = { $push: {  ['assignment.' + sub]: { date: date, value: assig }} };
+                  newvalues = { $push: {  ['assignment.' + sub]: { date: date, value: assig, upload:date1 }} };
                 }
                  await   collection.updateOne(myquery, newvalues).then(res =>{
                         console.log("assig updated");
@@ -370,6 +500,50 @@ app.post("/assig", async(req, res) => {
 
   }
   res.json({message:'success'});
+});
+
+app.post("/notify", async(req, res) => {
+  const {input,date} = req.body;
+  try{
+    const db = client.db('data');
+    const collection = db.collection('user');
+   
+
+    
+        
+
+    
+  
+    
+    var myquery = {['notifications']:{$type: 'array'},['notifications.' +'date']: date };
+    var newvalues = { $set: { ['notifications'+'.$']: { date: date, value: input } } };
+    
+    let result = await collection.updateOne(myquery, newvalues);
+                if (result.matchedCount === 0) {
+                  myquery = {['notifications']:{$type: 'array'}};
+                  newvalues = { $push:  {['notifications']:{ date: date, value: input } }};
+                }
+                 await   collection.updateOne(myquery, newvalues).then(res =>{
+                        console.log("notification updated");
+                        
+            
+                    }).catch(err =>{
+                        console.log(err);
+                    });
+                  
+  }finally{
+
+  }
+  res.json({message:'success'});
+});
+app.get("/notifications",async function(req,res){
+  const db = client.db('data');
+    const collection = db.collection('user');
+  let nf=  await collection.findOne({notifications:{$type: 'array'}}).catch(err =>{
+    console.log(err);
+});
+  res.json(nf);
+
 });
 var sub='';
 var cls='';
@@ -445,6 +619,7 @@ for (const item of obj) {
        run().catch(console.dir);
 
 });
+
 app.post("/updatemark", async(req, res) => {
     const {series, selectedValues,jsonData } = req.body;
     async function run(){
@@ -513,7 +688,6 @@ for (const item of obj) {
        run().catch(console.dir);
 
 });
-
 app.get("/api", (req, res) => {
     res.json({ message: "serverconnected" });
 });
