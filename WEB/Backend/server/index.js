@@ -166,30 +166,46 @@ app.get("/api/student", async(req, res) => {
   
     res.json(student);
 });
-const path1 = 'uploads/assig/';
+
 const path2 = 'uploads/notification/'
-if (!fs.existsSync(path1)) {
-    fs.mkdirSync(path1, { recursive: true });
-}
+
 if (!fs.existsSync(path2)) {
   fs.mkdirSync(path2, { recursive: true });
 }
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null,path1);
-  },
-  filename: (req, file, cb) => {
-    cb(null, file.originalname);
-  },
-});
 
-const upload = multer({ storage });
 
-app.post('/upload', upload.single('file'), (req, res) => {
-  console.log("file uploaded");
-  res.json({ file: req.file });
+
+app.post('/upload', (req, res) => {
+  let sub = req.headers['access-control-allow-headers'];
+  let path1 = 'uploads/assig/' + sub + '/';
+
+  if (!fs.existsSync(path1)) {
+    fs.mkdirSync(path1, { recursive: true });
+  }
+
+  const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+      cb(null, path1);
+    },
+    filename: (req, file, cb) => {
+      cb(null, file.originalname);
+    },
+  });
+
+  const upload = multer({ storage });
+
+  upload.single('file')(req, res, (err) => {
+    if (err) {
+      console.log(err);
+      return res.status(500).json({ error: err.message });
+    }
+
+    console.log('file uploaded');
+    res.json({ file: req.file });
+  });
 });
+let subj = [];
 const storages = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null,path2);
@@ -205,20 +221,26 @@ app.post('/pdfnotify', upload1.single('file'), (req, res) => {
 });
 const assigpath = path.join('C:/Users/mincy/Desktop/portal', 'uploads/assig');
 
-app.get('/getFile/:index', function(req, res) {
-  fs.readdir(assigpath, (err, files) => {
+app.get('/getFile/:sub/:index', function(req, res) {
+  fs.readdir(assigpath+'/'+[req.params.sub], (err, files) => {
     if (err) {
       return res.status(500).send('Unable to scan directory: ' + err);
     }
+    console.log("present");
+
     const file = files[req.params.index];
     if (file) {
-      const filePath = path.join(assigpath, file);
+      console.log("present");
+      const filePath = path.join(assigpath+'/'+[req.params.sub], file);
       fs.stat(filePath,(err,stats) =>{
         if (err) {
-          console.error(err);
+          console.error(err);4444
           return;
         }
         res.setHeader('X-Creation-Time', stats.birthtime.toISOString());
+        if(subj[req.params.index]){
+        res.setHeader('access-control-allow-headers',sub[req.params.index])
+        }
         res.sendFile(filePath);
       });
     } else {
