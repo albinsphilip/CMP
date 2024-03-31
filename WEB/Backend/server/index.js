@@ -15,7 +15,7 @@ const client = new MongoClient(uri, {
     }
 });
 async function run(){
-    
+  adduser  
 const PORT = process.env.PORT || 3001;
 const app = express();
 
@@ -587,7 +587,7 @@ app.post("/adduser", async(req,res)=>{
                 
           }
       ]
-      try {d
+      try {
         const insertManyResult = await collection.insertMany(us);
         const cursor1 = collection.find({ pos: { $in: ['teacher', 'student'] } });
         tusers=[];
