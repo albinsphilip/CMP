@@ -82,7 +82,7 @@ function AProfile(){
        
          
 
-         axios.post("/adddept", {d}).then((response) => {
+         axios.post("http://localhost:3001/adddept", {d}).then((response) => {
                
            
         })
@@ -105,7 +105,7 @@ function AProfile(){
         event.preventDefault();
         
         if(window.confirm("ARE YOU SURE ?")){
-        const response = await fetch("/wait");
+        const response = await fetch("http://localhost:3001/wait");
         const data = await response.json();
         if(response){
         alert(data.message);
@@ -117,7 +117,7 @@ function AProfile(){
         event.preventDefault();
         
         if(window.confirm("ARE YOU SURE ?")){
-        const response = await fetch("/set");
+        const response = await fetch("http://localhost:3001/set");
         const data = await response.json();
         if(response){
         alert(data.message);
@@ -134,7 +134,7 @@ function AProfile(){
        if(username && name && (pass && pos)&& clas ){
         if (window.confirm(" Do you want to continue?")) {
        
-        axios.post("/adduser", { username, pass,pos,clas,name,item }).then((response) => {
+        axios.post("http://localhost:3001/adduser", { username, pass,pos,clas,name,item }).then((response) => {
        
          
         
@@ -181,7 +181,7 @@ function AProfile(){
       }
         fetchData();
         const fetchD = async () => {
-          const response = await fetch("/get");
+          const response = await fetch("http://localhost:3001/get");
           const data = await response.json();
          
           setStops(data);
