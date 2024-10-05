@@ -6,7 +6,7 @@ const multer = require("multer");
 const fs = require('fs');
 const jwt = require("jsonwebtoken");
 const { error } = require('console');
-const uri = "mongodb+srv://aaron:aa@cluster0.cgelvmu.mongodb.net/?retryWrites=true&w=majority";
+const uri = //hidden;
 const client = new MongoClient(uri, {
     serverApi: {
         version: ServerApiVersion.v1,
